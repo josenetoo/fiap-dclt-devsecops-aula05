@@ -10,15 +10,14 @@
 
 ### Passo 1: Fluxo de DAST no CI/CD
 
-```mermaid
-graph LR
-    A[Push] --> B[Build]
-    B --> C[Deploy Staging]
-    C --> D[ZAP Scan]
-    D --> E{Alertas?}
-    E -->|Críticos| F[❌ Falha]
-    E -->|Warnings| G[⚠️ Relatório]
-    G --> H[Deploy Prod]
+```
+Push → Build → Deploy Staging → ZAP Scan
+                                    ↓
+                              Alertas?
+                             /        \
+                      Críticos      Warnings
+                          ↓            ↓
+                       FALHA      Relatório → Deploy Prod
 ```
 
 **Pontos importantes:**
@@ -173,15 +172,16 @@ EOF
 
 ### Passo 6: Entender o Workflow
 
-```mermaid
-graph TB
-    A[Trigger] --> B{Manual ou Agendado}
-    B --> C[Checkout]
-    C --> D[ZAP Scan]
-    D --> E[Gera Relatórios]
-    E --> F[Upload Artifacts]
-    D --> G{Vulnerabilidades?}
-    G -->|Sim| H[Cria Issue]
+```
+Trigger (Manual/Agendado)
+         ↓
+      Checkout
+         ↓
+      ZAP Scan ──→ Vulnerabilidades? ──→ Cria Issue
+         ↓
+   Gera Relatórios
+         ↓
+  Upload Artifacts
 ```
 
 **Parâmetros importantes:**

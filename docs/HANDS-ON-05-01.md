@@ -27,17 +27,15 @@
 
 ### Passo 1: Diferença Fundamental
 
-```mermaid
-graph TB
-    subgraph "SAST - Análise Estática"
-        A[Código Fonte] --> B[Análise]
-        B --> C[Findings]
-    end
-    
-    subgraph "DAST - Análise Dinâmica"
-        D[Aplicação Rodando] --> E[Ataque Simulado]
-        E --> F[Vulnerabilidades]
-    end
+```
+SAST (Análise Estática)          DAST (Análise Dinâmica)
+┌───────────────────────┐          ┌───────────────────────┐
+│  Código Fonte        │          │  Aplicação Rodando   │
+│       ↓              │          │         ↓            │
+│    Análise           │          │   Ataque Simulado    │
+│       ↓              │          │         ↓            │
+│   Findings           │          │  Vulnerabilidades    │
+└───────────────────────┘          └───────────────────────┘
 ```
 
 | Aspecto | SAST | DAST |
@@ -55,13 +53,16 @@ graph TB
 
 **Problema**: SAST pode ter muitos falsos positivos
 
-```mermaid
-graph LR
-    A[SAST encontra 100 issues] --> B{Quantos são reais?}
-    B --> C[50 falsos positivos]
-    B --> D[50 reais]
-    D --> E{Quantos exploráveis?}
-    E --> F[20 exploráveis]
+```
+SAST encontra 100 issues
+         ↓
+   Quantos são reais?
+    /           \
+50 falsos     50 reais
+positivos        ↓
+          Quantos exploráveis?
+                 ↓
+            20 exploráveis
 ```
 
 **DAST resolve isso**: Testa a aplicação real, encontra o que é realmente explorável!
@@ -224,13 +225,10 @@ docker rm app-test
 
 ### Passo 10: Por que Staging?
 
-```mermaid
-graph LR
-    A[DEV] --> B[STAGING]
-    B --> C[PROD]
-    
-    D[DAST] --> B
-    D -.->|❌ NUNCA| C
+```
+DEV ──→ STAGING ──→ PROD
+            ↑          ✗
+           DAST    (NUNCA!)
 ```
 
 > ⚠️ **NUNCA** execute DAST em produção! Pode causar:

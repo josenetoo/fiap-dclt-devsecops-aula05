@@ -10,13 +10,11 @@
 
 ### Passo 1: O Ciclo Completo
 
-```mermaid
-graph LR
-    A[1. Detectar] --> B[2. Analisar]
-    B --> C[3. Priorizar]
-    C --> D[4. Corrigir]
-    D --> E[5. Verificar]
-    E --> A
+```
+┌──────────────────────────────────────────────────┐
+│                                                  │
+↓                                                  │
+Detectar → Analisar → Priorizar → Corrigir → Verificar
 ```
 
 > "Encontrar vulnerabilidades é só metade do trabalho!"
@@ -74,15 +72,29 @@ Content-Length: 1234
 
 ## ✅ Parte 3: Implementar Correções
 
-### Passo 5: Adicionar Headers no Flask
+### Passo 5: Localizar onde adicionar o código
 
-Edite o arquivo `app.py`:
+Abra o arquivo `app.py` e localize a estrutura atual:
+
+```
+app.py (estrutura atual)
+│
+├── imports (linha ~1-10)
+├── app = Flask(__name__)  ← APÓS esta linha
+├── ... configurações ...
+├── @app.route('/')        ← ANTES das rotas
+└── ... rotas ...
+```
+
+> ⚠️ **IMPORTANTE**: O código de security headers deve ser adicionado **APÓS** `app = Flask(__name__)` e **ANTES** das rotas (`@app.route`).
+
+---
+
+### Passo 6: Adicionar Security Headers
+
+Adicione este bloco no `app.py`, logo após `app = Flask(__name__)`:
 
 ```python
-from flask import Flask, make_response
-
-app = Flask(__name__)
-
 # ============================================
 # SECURITY HEADERS - Adicionar a TODAS as respostas
 # ============================================
@@ -114,15 +126,13 @@ def add_security_headers(response):
 
 ---
 
-### Passo 6: Configurar Cookies Seguros
+### Passo 7: Configurar Cookies Seguros (Opcional)
+
+Se sua aplicação usa sessões/cookies, adicione também após `app = Flask(__name__)`:
 
 ```python
-from flask import Flask
-
-app = Flask(__name__)
-
 # ============================================
-# COOKIE SECURITY
+# COOKIE SECURITY (opcional)
 # ============================================
 app.config.update(
     SESSION_COOKIE_SECURE=True,      # Só HTTPS
@@ -133,7 +143,38 @@ app.config.update(
 
 ---
 
-### Passo 7: Verificar Headers Após Correção
+### Passo 8: Estrutura Final do app.py
+
+Após as alterações, seu `app.py` deve ficar assim:
+
+```python
+# imports...
+from flask import Flask, request, jsonify, render_template_string
+# ...
+
+app = Flask(__name__)
+
+# ============================================
+# SECURITY HEADERS (NOVO!)
+# ============================================
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    # ... resto dos headers ...
+    return response
+
+# ============================================
+# ENDPOINTS (já existentes)
+# ============================================
+@app.route('/')
+def home():
+    # ...
+```
+
+---
+
+### Passo 9: Verificar Headers Após Correção
 
 **Linux/Mac:**
 ```bash
@@ -163,7 +204,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 
 ## 🔄 Parte 4: Validar Correções
 
-### Passo 8: Re-executar ZAP Local
+### Passo 10: Re-executar ZAP Local
 
 **Linux/Mac:**
 ```bash
@@ -183,7 +224,7 @@ FAIL-NEW: 0	WARN-NEW: 0	PASS: 48
 
 ---
 
-### Passo 9: Commit e Deploy
+### Passo 11: Commit e Deploy
 
 **Linux/Mac:**
 ```bash
@@ -196,7 +237,7 @@ git push origin main
 
 ---
 
-### Passo 10: Re-executar Pipeline DAST
+### Passo 12: Re-executar Pipeline DAST
 
 1. GitHub > **Actions**
 2. **DAST Scan** > **Run workflow**
@@ -206,7 +247,7 @@ git push origin main
 
 ## 📊 Parte 5: Comparação Antes/Depois
 
-### Passo 11: Comparar Resultados
+### Passo 13: Comparar Resultados
 
 | Métrica | Antes | Depois |
 |---------|-------|--------|
