@@ -27,17 +27,22 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
+      # Cria diretório para relatórios com permissão adequada
+      - name: 📁 Preparar diretório de relatórios
+        run: mkdir -p reports
+
       # Executa ZAP via Docker (evita bug de artifact da action oficial)
       - name: 🕷️ ZAP Baseline Scan
         run: |
           docker run --rm \
-            -v ${{ github.workspace }}:/zap/wrk/:rw \
+            -v ${{ github.workspace }}:/zap/wrk/:ro \
+            -v ${{ github.workspace }}/reports:/zap/reports/:rw \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
             -t ${{ secrets.STAGING_URL }} \
             -c /zap/wrk/.zap/rules.tsv \
-            -J report.json \
-            -r report.html \
+            -J /zap/reports/report.json \
+            -r /zap/reports/report.html \
             -a || true
 
       - name: 📤 Upload Reports
@@ -45,7 +50,5 @@ jobs:
         if: always()
         with:
           name: zap-reports
-          path: |
-            report.html
-            report.json
+          path: reports/
           retention-days: 30
