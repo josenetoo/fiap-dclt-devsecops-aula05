@@ -126,6 +126,11 @@ on:
   schedule:
     - cron: '0 2 * * 1'
 
+# Permissões para criar issues automaticamente
+permissions:
+  issues: write
+  contents: read
+
 jobs:
   # ============================================
   # JOB: ZAP Baseline Scan
@@ -144,6 +149,7 @@ jobs:
           target: ${{ secrets.STAGING_URL }}
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a'
+          issue_title: '🔴 ZAP DAST - Vulnerabilidades Encontradas'
 
       - name: 📤 Upload HTML Report
         uses: actions/upload-artifact@v4
@@ -174,6 +180,8 @@ graph TB
     C --> D[ZAP Scan]
     D --> E[Gera Relatórios]
     E --> F[Upload Artifacts]
+    D --> G{Vulnerabilidades?}
+    G -->|Sim| H[Cria Issue]
 ```
 
 **Parâmetros importantes:**
@@ -183,6 +191,17 @@ graph TB
 | `target` | URL da aplicação (secret) |
 | `rules_file_name` | Arquivo de regras |
 | `cmd_options: '-a'` | Ajax spider habilitado |
+| `issue_title` | Título da issue criada automaticamente |
+
+**Permissões necessárias:**
+
+```yaml
+permissions:
+  issues: write    # Criar issues automaticamente
+  contents: read   # Ler arquivos do repositório
+```
+
+> 💡 Quando o ZAP encontra vulnerabilidades, cria automaticamente uma **Issue** no repositório com os detalhes!
 
 ---
 

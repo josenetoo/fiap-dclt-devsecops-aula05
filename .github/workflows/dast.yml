@@ -11,6 +11,11 @@ on:
   schedule:
     - cron: '0 2 * * 1'
 
+# Permissões para criar issues automaticamente
+permissions:
+  issues: write
+  contents: read
+
 jobs:
   # ============================================
   # JOB: ZAP Baseline Scan
@@ -29,6 +34,7 @@ jobs:
           target: ${{ secrets.STAGING_URL }}
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a'
+          issue_title: '🔴 ZAP DAST - Vulnerabilidades Encontradas'
 
       - name: 📤 Upload HTML Report
         uses: actions/upload-artifact@v4
