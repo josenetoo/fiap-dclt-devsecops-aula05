@@ -143,34 +143,48 @@ app.config.update(
 
 ---
 
-### Passo 8: Estrutura Final do app.py
+### Passo 8: Código Completo para Copiar
 
-Após as alterações, seu `app.py` deve ficar assim:
+Copie e cole este bloco **logo após** a linha `app = Flask(__name__)` no seu `app.py`:
 
 ```python
-# imports...
-from flask import Flask, request, jsonify, render_template_string
-# ...
-
-app = Flask(__name__)
-
 # ============================================
-# SECURITY HEADERS (NOVO!)
+# SECURITY HEADERS - Adicionar a TODAS as respostas
 # ============================================
 @app.after_request
 def add_security_headers(response):
+    # Previne MIME sniffing
     response.headers['X-Content-Type-Options'] = 'nosniff'
+    
+    # Previne clickjacking
     response.headers['X-Frame-Options'] = 'DENY'
-    # ... resto dos headers ...
+    
+    # Filtro XSS do browser
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    
+    # Força HTTPS (em produção)
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    
+    # Content Security Policy básica
+    response.headers['Content-Security-Policy'] = "default-src 'self'"
+    
+    # Controla Referer
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    
+    # Permissions Policy (novo!)
+    response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+    
+    # Cache Control
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    
+    # Cross-Origin headers para Spectre
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    
     return response
-
-# ============================================
-# ENDPOINTS (já existentes)
-# ============================================
-@app.route('/')
-def home():
-    # ...
 ```
+
+> 💡 **Dica**: Cole este código na **linha 13** do `app.py`, logo após `app = Flask(__name__)`
 
 ---
 
