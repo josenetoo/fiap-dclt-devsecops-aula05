@@ -11,6 +11,41 @@ from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
 
+# ============================================
+# SECURITY HEADERS - Adicionar a TODAS as respostas
+# ============================================
+@app.after_request
+def add_security_headers(response):
+    # Previne MIME sniffing
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    
+    # Previne clickjacking
+    response.headers['X-Frame-Options'] = 'DENY'
+    
+    # Filtro XSS do browser
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    
+    # Força HTTPS (em produção)
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    
+    # Content Security Policy básica
+    response.headers['Content-Security-Policy'] = "default-src 'self'"
+    
+    # Controla Referer
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    
+    # Permissions Policy (novo!)
+    response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+    
+    # Cache Control
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    
+    # Cross-Origin headers para Spectre
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    
+    return response
+
 # Configuração do banco de dados
 DATABASE = os.getenv('DATABASE_PATH', 'users.db')
 
