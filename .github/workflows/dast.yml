@@ -1,0 +1,47 @@
+# ============================================
+# WORKFLOW: DAST com OWASP ZAP
+# ============================================
+name: 🔍 DAST Scan
+
+on:
+  # Execução manual
+  workflow_dispatch:
+  
+  # Agendado: Segunda às 2h
+  schedule:
+    - cron: '0 2 * * 1'
+
+jobs:
+  # ============================================
+  # JOB: ZAP Baseline Scan
+  # ============================================
+  zap-baseline:
+    name: 🕷️ OWASP ZAP
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🕷️ ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: ${{ secrets.STAGING_URL }}
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'
+
+      - name: 📤 Upload HTML Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-report-html
+          path: report_html.html
+          retention-days: 30
+
+      - name: 📤 Upload JSON Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-report-json
+          path: report_json.json
+          retention-days: 30
