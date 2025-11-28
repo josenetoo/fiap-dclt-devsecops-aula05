@@ -11,9 +11,8 @@ on:
   schedule:
     - cron: '0 2 * * 1'
 
-# Permissões para criar issues automaticamente
+# Permissões mínimas necessárias
 permissions:
-  issues: write
   contents: read
 
 jobs:
@@ -28,30 +27,25 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      # Bug conhecido: action tenta criar artifact com nome inválido
-      # continue-on-error permite que o workflow continue após o scan
+      # Executa ZAP via Docker (evita bug de artifact da action oficial)
       - name: 🕷️ ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0
-        continue-on-error: true
-        with:
-          target: ${{ secrets.STAGING_URL }}
-          rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a'
-          issue_title: '🔴 ZAP DAST - Vulnerabilidades Encontradas'
-          fail_action: false
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/zap/wrk/:rw \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t ${{ secrets.STAGING_URL }} \
+            -c /zap/wrk/.zap/rules.tsv \
+            -J report.json \
+            -r report.html \
+            -a || true
 
-      - name: 📤 Upload HTML Report
+      - name: 📤 Upload Reports
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: zap-report-html
-          path: report_html.html
-          retention-days: 30
-
-      - name: 📤 Upload JSON Report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: zap-report-json
-          path: report_json.json
+          name: zap-reports
+          path: |
+            report.html
+            report.json
           retention-days: 30
