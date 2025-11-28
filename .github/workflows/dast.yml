@@ -27,20 +27,23 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
+      # Cria arquivos de relatório com permissão de escrita
+      - name: � Preparar arquivos de relatório
+        run: |
+          touch report.html report.json
+          chmod 666 report.html report.json
+
       # Executa ZAP via Docker (evita bug de artifact da action oficial)
-      # Nota: ZAP container usa user 'zap' (uid 1000), chmod 766 permite escrita
       - name: 🕷️ ZAP Baseline Scan
         run: |
-          mkdir -p reports && chmod 766 reports
           docker run --rm \
-            -v ${{ github.workspace }}:/zap/wrk/:ro \
-            -v ${{ github.workspace }}/reports:/zap/wrk/reports/:rw \
+            -v ${{ github.workspace }}:/zap/wrk/:rw \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
             -t ${{ secrets.STAGING_URL }} \
             -c /zap/wrk/.zap/rules.tsv \
-            -J /zap/wrk/reports/report.json \
-            -r /zap/wrk/reports/report.html \
+            -J /zap/wrk/report.json \
+            -r /zap/wrk/report.html \
             -a || true
 
       - name: 📤 Upload Reports
@@ -48,5 +51,7 @@ jobs:
         if: always()
         with:
           name: zap-reports
-          path: reports/
+          path: |
+            report.html
+            report.json
           retention-days: 30
