@@ -1,0 +1,41 @@
+# ============================================
+# WORKFLOW: DAST com OWASP ZAP
+# ============================================
+name: 🔍 DAST Scan
+
+on:
+  # Execução manual
+  workflow_dispatch:
+  
+  # Agendado: Segunda às 2h
+  schedule:
+    - cron: '0 2 * * 1'
+
+# Permissões para criar issues automaticamente
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  # ============================================
+  # JOB: ZAP Baseline Scan
+  # ============================================
+  zap-baseline:
+    name: 🕷️ OWASP ZAP
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      # Action oficial do ZAP
+      # Nota: bug conhecido no upload de artifact interno, mas scan e issue funcionam
+      - name: 🕷️ ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        continue-on-error: true
+        with:
+          target: ${{ secrets.STAGING_URL }}
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'
+          issue_title: '🔴 ZAP DAST - Vulnerabilidades Encontradas'
+          fail_action: false
