@@ -261,17 +261,4 @@ No GitHub, adicione secret:
 
 ---
 
-## ✅ Checkpoint
-
-Ao final deste vídeo você deve ter:
-
-- [ ] Entender diferença SAST vs DAST
-- [ ] Conhecer OWASP ZAP
-- [ ] Aplicação rodando localmente
-- [ ] ZAP Baseline executado
-- [ ] Alertas identificados
-- [ ] Secret STAGING_URL configurado
-
----
-
 **FIM DO VÍDEO 5.1** ✅

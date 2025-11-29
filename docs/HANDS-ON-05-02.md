@@ -142,29 +142,17 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
+      # Action oficial do ZAP
+      # Nota: bug conhecido no upload de artifact interno, mas scan e issue funcionam
       - name: 🕷️ ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0
+        uses: zaproxy/action-baseline@v0.14.0
+        continue-on-error: true
         with:
           target: ${{ secrets.STAGING_URL }}
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a'
           issue_title: '🔴 ZAP DAST - Vulnerabilidades Encontradas'
-
-      - name: 📤 Upload HTML Report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: zap-report-html
-          path: report_html.html
-          retention-days: 30
-
-      - name: 📤 Upload JSON Report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: zap-report-json
-          path: report_json.json
-          retention-days: 30
+          fail_action: false
 EOF
 ```
 
@@ -178,10 +166,6 @@ Trigger (Manual/Agendado)
       Checkout
          ↓
       ZAP Scan ──→ Vulnerabilidades? ──→ Cria Issue
-         ↓
-   Gera Relatórios
-         ↓
-  Upload Artifacts
 ```
 
 **Parâmetros importantes:**
@@ -192,6 +176,8 @@ Trigger (Manual/Agendado)
 | `rules_file_name` | Arquivo de regras |
 | `cmd_options: '-a'` | Ajax spider habilitado |
 | `issue_title` | Título da issue criada automaticamente |
+| `fail_action: false` | Não falha o pipeline com warnings |
+| `continue-on-error: true` | Ignora bug de artifact da action |
 
 **Permissões necessárias:**
 
@@ -202,6 +188,8 @@ permissions:
 ```
 
 > 💡 Quando o ZAP encontra vulnerabilidades, cria automaticamente uma **Issue** no repositório com os detalhes!
+
+> ⚠️ **Nota**: A action oficial tem um bug conhecido no upload de artifacts interno. O `continue-on-error: true` permite que o workflow seja marcado como sucesso mesmo com esse warning.
 
 ---
 
@@ -234,35 +222,37 @@ git push origin main
 
 ---
 
-### Passo 9: Baixar Relatórios
+### Passo 9: Verificar Issue Criada
 
-1. Após conclusão, clique na execução
-2. Em **Artifacts**, baixe:
-   - `zap-report-html` → Relatório visual
-   - `zap-report-json` → Dados para processamento
+1. GitHub > **Issues**
+2. Procure por: **🔴 ZAP DAST - Vulnerabilidades Encontradas**
+3. A issue contém:
+   - Lista de alertas encontrados
+   - Severidade de cada alerta
+   - URLs afetadas
+   - Sugestões de correção
 
 ---
 
-### Passo 10: Analisar Relatório HTML
+### Passo 10: Analisar a Issue
 
-Abra `report_html.html` no browser:
+A issue criada automaticamente terá este formato:
 
 ```
-╔══════════════════════════════════════════╗
-║         ZAP Scanning Report               ║
-╠══════════════════════════════════════════╣
-║ Alerts                                    ║
-║ ├── High: 0                               ║
-║ ├── Medium: 2                             ║
-║ ├── Low: 3                                ║
-║ └── Informational: 5                      ║
-╠══════════════════════════════════════════╣
-║ Alert Details                             ║
-║ ├── X-Content-Type-Options Missing        ║
-║ │   Risk: Low                             ║
-║ │   URL: http://...                       ║
-║ │   Solution: Add header                  ║
-╚══════════════════════════════════════════╝
+🔴 ZAP DAST - Vulnerabilidades Encontradas
+
+## Alertas Encontrados
+
+| Alerta | Risco | Contagem |
+|--------|-------|----------|
+| X-Content-Type-Options Missing | Low | 3 |
+| CSP Header Not Set | Medium | 2 |
+| Server Version Disclosure | Low | 3 |
+
+## Detalhes
+- **X-Content-Type-Options Missing**
+  - URL: http://...
+  - Solução: Adicionar header X-Content-Type-Options: nosniff
 ```
 
 ---
@@ -274,18 +264,8 @@ Abra `report_html.html` no browser:
 | `Target unreachable` | URL errada ou app down | Verificar STAGING_URL |
 | Timeout | App lenta | Aumentar timeout |
 | Muitos falsos positivos | Rules não configuradas | Ajustar rules.tsv |
-
----
-
-## ✅ Checkpoint
-
-Ao final deste vídeo você deve ter:
-
-- [ ] Entender estratégias de DAST no CI
-- [ ] Arquivo rules.tsv criado
-- [ ] Workflow dast.yml configurado
-- [ ] Scan executado manualmente
-- [ ] Relatórios baixados e analisados
+| Warning de artifact | Bug da action oficial | Ignorar (continue-on-error) |
+| Issue não criada | Falta permissão | Verificar `issues: write` |
 
 ---
 

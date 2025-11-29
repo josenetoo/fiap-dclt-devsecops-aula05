@@ -282,20 +282,6 @@ git push origin main
 
 ---
 
-## ✅ Checkpoint
-
-Ao final deste vídeo você deve ter:
-
-- [ ] Entender security headers
-- [ ] Headers implementados no Flask
-- [ ] Cookies configurados com flags seguras
-- [ ] ZAP local mostrando menos alertas
-- [ ] Código commitado
-- [ ] Pipeline re-executado
-- [ ] Comparar antes/depois
-
----
-
 ## 📖 Leitura Complementar
 
 - [OWASP Secure Headers](https://owasp.org/www-project-secure-headers/)
