@@ -11,8 +11,9 @@ on:
   schedule:
     - cron: '0 2 * * 1'
 
-# Permissões mínimas necessárias
+# Permissões para criar issues automaticamente
 permissions:
+  issues: write
   contents: read
 
 jobs:
@@ -27,31 +28,14 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      # Cria arquivos de relatório com permissão de escrita
-      - name: � Preparar arquivos de relatório
-        run: |
-          touch report.html report.json
-          chmod 666 report.html report.json
-
-      # Executa ZAP via Docker (evita bug de artifact da action oficial)
+      # Action oficial do ZAP
+      # Nota: bug conhecido no upload de artifact interno, mas scan e issue funcionam
       - name: 🕷️ ZAP Baseline Scan
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/zap/wrk/:rw \
-            ghcr.io/zaproxy/zaproxy:stable \
-            zap-baseline.py \
-            -t ${{ secrets.STAGING_URL }} \
-            -c /zap/wrk/.zap/rules.tsv \
-            -J /zap/wrk/report.json \
-            -r /zap/wrk/report.html \
-            -a || true
-
-      - name: 📤 Upload Reports
-        uses: actions/upload-artifact@v4
-        if: always()
+        uses: zaproxy/action-baseline@v0.14.0
+        continue-on-error: true
         with:
-          name: zap-reports
-          path: |
-            report.html
-            report.json
-          retention-days: 30
+          target: ${{ secrets.STAGING_URL }}
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'
+          issue_title: '🔴 ZAP DAST - Vulnerabilidades Encontradas'
+          fail_action: false
